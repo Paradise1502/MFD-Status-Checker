@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MFD Member Status Checker</title>
+  <style>
+    body {
+      background: url('background.jpg') no-repeat center center;
+      background-size: cover;
+      background-attachment: scroll; /* Ensure background scrolls with content */
+      color: #f5f5f5;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      text-shadow: 1px 1px 2px #000;
+    }
+
+    .container {
+      margin: 50px auto;
+      padding: 20px;
+      max-width: 900px;
+      background: black;
+      border-radius: 15px;
+      box-shadow: 0 0 10px #444;
+      text-align: center; /* Center-aligns content inside the container */
+    }
+
+    .logo {
+      width: 100%;
+      max-width: 900px; /* Adjusted width for seamless fit */
+      margin: 0 auto 10px auto;
+      border-radius: 10px;
+    }
+
+    .input-group {
+      margin: 15px 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .input-group label {
+      margin-bottom: 5px;
+      font-size: 16px;
+    }
+
+    input[type="text"] {
+      width: 250px;
+      padding: 10px;
+      font-size: 16px;
+      border: 2px solid #444;
+      border-radius: 10px;
+      text-align: center;
+      background: #222;
+      color: white;
+    }
+
+    input[type="text"]:invalid {
+      border: 2px solid #e74c3c;
+    }
+
+    input[type="text"]:valid {
+      border: 2px solid #2ecc71;
+    }
+
+    .button-group {
+      display: flex;
+      justify-content: center; /* Centers the buttons horizontally */
+      gap: 15px; /* Adds space between the buttons */
+      margin-top: 20px;
+    }
+
+    button {
+      background-color: #e74c3c;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 16px;
+      font-weight: bold;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #c0392b;
+    }
+
+    .status {
+      font-size: 20px;
+      margin-top: 20px;
+      padding: 10px;
+      border-radius: 10px;
+      display: none;
+      color: #fff;
+    }
+
+    .happy {
+      background-color: #2ecc71;
+      display: inline-block;
+    }
+
+    .sad {
+      background-color: #e74c3c;
+      display: inline-block;
+    }
+
+    .result, .details {
+      margin-top: 20px;
+      font-size: 18px;
+      text-align: left;
+      margin: 20px auto;
+      padding: 20px;
+      max-width: 800px;
+      background: rgba(34, 34, 34, 0.95);
+      border-radius: 10px;
+      box-shadow: 0 0 5px #333;
+    }
+
+    .result {
+      text-align: center;
+    }
+
+    ul {
+      list-style-type: none;
+      padding: 0;
+    }
+
+    ul li {
+      margin: 10px 0;
+      padding: 10px;
+      background: rgba(51, 51, 51, 0.9);
+      border-radius: 5px;
+      font-size: 16px;
+      color: #ddd;
+    }
+
+    ul li strong {
+      color: #e74c3c;
+    }
+
+    .compensation-box {
+      border: 2px solid #e74c3c;
+      padding: 15px;
+      background: rgba(51, 51, 51, 0.9);
+      border-radius: 10px;
+      margin-top: 20px;
+    }
+
+    .compensation-box h3 {
+      color: #e74c3c;
+      margin-bottom: 10px;
+    }
+
+    .warning-box {
+      border: 2px solid red;
+      padding: 15px;
+      background: rgba(51, 51, 51, 0.9);
+      border-radius: 10px;
+      margin-top: 20px;
+      color: red;
+    }
+
+    .warning-box h3 {
+      color: red;
+      margin-bottom: 10px;
+    }
+
+    @media (max-width: 600px) {
+      body {
+        font-size: 14px;
+      }
+      .container {
+        width: 90%;
+        padding: 10px;
+      }
+      input[type="text"] {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="container">
+      <!-- Add Image Above the Status Checker -->
+      <img src="image.png" alt="Marked for Death" class="logo">
+
+      <div class="input-group">
+        <label for="power">Power (in Millions)</label>
+        <input type="text" id="power" placeholder="Enter power (e.g., 80)" title="Input your power in millions. Example: 80 for 80M." required pattern="^\d+(\.\d+)?$">
+      </div>
+
+      <div class="input-group">
+        <label for="merits">Merits (in Millions)</label>
+        <input type="text" id="merits" placeholder="Enter merits (e.g., 10.2)" title="Input your merits in millions. Example: 10.2 for 10.2M." required pattern="^\d+(\.\d+)?$">
+      </div>
+
+      <div class="button-group">
+        <button onclick="checkStatus()">ENTER</button>
+        <button onclick="resetForm()">RESET</button>
+      </div>
+
+      <div id="statusIcon" class="status"></div>
+      <div id="result" class="result"></div>
+      <div id="details" class="details"></div>
+    </div>
+  </main>
+
+  <script>
+    const insults = [
+      "Abda is watching you 👀!",
+      "Leadership is disappointed...",
+      "You better start grinding merits!",
+      "Abda will find you. 😡",
+      "Are you even trying?",
+      "Do you even know what teamwork is?",
+      "This is embarrassing. 😤",
+      "Fix this or prepare to migrate."
+    ];
+
+    const praises = [
+      "Excellent work! Leadership is impressed! 🎉",
+      "You're a shining example of dedication! 🌟",
+      "Keep up the amazing work, hero! 💪",
+    ];
+
+    function formatNumber(num) {
+      return num.toLocaleString('de-DE', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+    }
+
+    function getRandomInsult() {
+      return insults[Math.floor(Math.random() * insults.length)];
+    }
+
+    function getRandomPraise() {
+      return praises[Math.floor(Math.random() * praises.length)];
+    }
+
+    function checkStatus() {
+      const power = parseFloat(document.getElementById("power").value) * 1_000_000;
+      const merits = parseFloat(document.getElementById("merits").value) * 1_000_000;
+
+      const resultDiv = document.getElementById("result");
+      const detailsDiv = document.getElementById("details");
+      const statusIcon = document.getElementById("statusIcon");
+
+      if (!power || !merits || power <= 0 || merits < 0) {
+        resultDiv.innerHTML = "Please enter valid numbers for Power and Merits!";
+        statusIcon.style.display = "none";
+        detailsDiv.innerHTML = "";
+        return;
+      }
+
+      let meritPercentage = 0;
+      let requiredMerits = 0;
+      let requiredDeaths = 0;
+      let minThresholdMerits = 0;
+      let compensationPercentage = 0;
+      const allianceHelps = 5000;
+
+      if (power < 50_000_000) {
+        meritPercentage = 0.1;
+        requiredDeaths = 100_000;
+        minThresholdMerits = power * 0.05;
+        compensationPercentage = 0.08;
+      } else if (power <= 100_000_000) {
+        meritPercentage = 0.15;
+        requiredDeaths = 150_000;
+        minThresholdMerits = power * 0.075;
+        compensationPercentage = 0.12;
+      } else {
+        meritPercentage = 0.2;
+        requiredDeaths = 200_000;
+        minThresholdMerits = power * 0.1;
+        compensationPercentage = 0.16;
+      }
+
+      requiredMerits = power * meritPercentage;
+      const meritsNeeded = Math.max(0, requiredMerits - merits);
+      const compensationMerits = power * compensationPercentage;
+
+      let paradisePraise = "";
+      if (merits / power > 0.5) {
+        paradisePraise = " Crazy, like Paradise!";
+      } else if (merits / power > 0.25) {
+        paradisePraise = " Not on Paradise level but still insane!";
+      }
+
+      if (meritsNeeded > 0) {
+        resultDiv.innerHTML = `😢 <strong>${getRandomInsult()}</strong> <br> You still need ${formatNumber(meritsNeeded / 1_000_000)}M merits to meet the requirement.`;
+        statusIcon.classList.remove("happy");
+        statusIcon.classList.add("sad");
+      } else {
+        resultDiv.innerHTML = `😄 <strong>${getRandomPraise()}</strong>${paradisePraise}`;
+        statusIcon.classList.remove("sad");
+        statusIcon.classList.add("happy");
+      }
+
+      statusIcon.style.display = "inline-block";
+
+      detailsDiv.innerHTML = `
+          <ul>
+              <li><strong>Merits Required:</strong> ${formatNumber(requiredMerits / 1_000_000)}M</li>
+              <li><strong>Troop Deaths Required:</strong> ${formatNumber(requiredDeaths)}</li>
+              <li><strong>Compensation Merit Requirement:</strong> ${formatNumber(compensationMerits / 1_000_000)}M</li>
+              <li><strong>Alliance Helps Needed:</strong> ${formatNumber(allianceHelps)}</li>
+          </ul>
+          <div class="compensation-box">
+              <h3>Compensation Options</h3>
+              <p>If you do not meet the main merit requirement, you must meet the reduced merit requirement (${(compensationPercentage * 100).toFixed(2)}%) and provide at least ${formatNumber(allianceHelps)} alliance helps.</p>
+          </div>
+          ${merits < minThresholdMerits ? `
+          <div class="warning-box">
+              <h3>⚠️ Minimum Threshold</h3>
+              <p>You must meet a minimum of ${formatNumber(minThresholdMerits / 1_000_000)}M merits to avoid being asked to migrate immediately.</p>
+          </div>` : ""}
+      `;
+    }
+
+    function resetForm() {
+      document.getElementById("power").value = "";
+      document.getElementById("merits").value = "";
+      document.getElementById("result").innerHTML = "";
+      document.getElementById("details").innerHTML = "";
+      document.getElementById("statusIcon").style.display = "none";
+    }
+  </script>
+</body>
+</html>
